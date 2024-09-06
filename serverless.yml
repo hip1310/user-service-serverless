@@ -1,0 +1,84 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: hip1310
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: serverless-node-api
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: user-service-serverless
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [UsersTable, Arn]
+  environment:
+    USERS_TABLE: Users
+
+functions:
+  createUser:
+    handler: src/handlers/user.createUser
+    events:
+      - http:
+          path: users
+          method: post
+
+  getUser:
+    handler: src/handlers/user.getUser
+    events:
+      - http:
+          path: users/{userId}
+          method: get
+
+  updateUser:
+    handler: src/handlers/user.updateUser
+    events:
+      - http:
+          path: users/{userId}
+          method: put
+
+  deleteUser:
+    handler: src/handlers/user.deleteUser
+    events:
+      - http:
+          path: users/{userId}
+          method: delete
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Users
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+plugins:
+  - serverless-offline
