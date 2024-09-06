@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { UserService } from "../services/user";
 import { IUser } from "../interfaces/user";
 
-const userService = new UserService();
+let userService = new UserService();
 
 export const getUser: APIGatewayProxyHandler = async (event) => {
   const { userId } = event.pathParameters || {};
@@ -146,4 +146,10 @@ export const deleteUser: APIGatewayProxyHandler = async (event) => {
       body: JSON.stringify({ error: (error as Error).message }),
     };
   }
+};
+
+
+// Add this for testing purposes
+export const setUserService = (service: UserService) => {
+  userService = service;
 };
