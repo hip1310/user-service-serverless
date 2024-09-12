@@ -9,7 +9,8 @@
     "remove": "serverless remove"
   },
   "dependencies": {
-    "aws-sdk": "^2.1690.0"
+    "aws-sdk": "^2.1690.0",
+    "dynamoose": "^4.0.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.96",

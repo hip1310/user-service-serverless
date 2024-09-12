@@ -1,46 +1,23 @@
 // src/services/DynamoDBService.ts
 import { IUserService, IUser } from "../interfaces/user";
-import * as AWS from "aws-sdk";
-
-const docClient = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = "Users";
+import  {User} from '../model/userSchema';
 
 export class UserService implements IUserService {
   async getUser(userId: string): Promise<IUser | null> {
-    const params = { TableName: TABLE_NAME, Key: { userId } };
-    const result = await docClient.get(params).promise();
-    return (result.Item as IUser) || null;
+    const result=await User.get(userId);
+    return (result.toJSON() as IUser) || null;
   }
 
   async createUser(user: IUser): Promise<void> {
-    const params = { TableName: TABLE_NAME, Item: user };
-    await docClient.put(params).promise();
+    const newUser = new User(user);
+    await newUser.save();
   }
 
   async updateUser(userId: string, user: Partial<IUser>): Promise<void> {
-    const updateExpression = [];
-    const expressionAttributeNames: { [key: string]: string } = {};
-    const expressionAttributeValues: { [key: string]: string | undefined } = {};
-
-    for (const key in user) {
-      updateExpression.push(`#${key} = :${key}`);
-      expressionAttributeNames[`#${key}`] = key;
-      expressionAttributeValues[`:${key}`] = user[key as keyof IUser];
-    }
-
-    const params = {
-      TableName: TABLE_NAME,
-      Key: { userId },
-      UpdateExpression: `set ${updateExpression.join(", ")}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-    };
-
-    await docClient.update(params).promise();
+    await User.update({ userId }, user);
   }
 
   async deleteUser(userId: string): Promise<void> {
-    const params = { TableName: TABLE_NAME, Key: { userId } };
-    await docClient.delete(params).promise();
+    await User.delete(userId);
   }
 }
